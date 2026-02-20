@@ -1,0 +1,15 @@
+{
+  "doc-1": [
+    {
+      "operation": {
+        "type": "insert",
+        "blockId": "block-1",
+        "leftKey": "ROOT:0",
+        "rightKey": null,
+        "value": "a",
+        "key": "b2cdeb04-4396-40a9-a750-f8d0fc7fb9f0:1"
+      },
+      "clientId": "121086b6-ad8c-41fc-a3a5-a21a576ce628"
+    }
+  ]
+}
