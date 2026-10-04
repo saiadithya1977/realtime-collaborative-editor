@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { history } from "@codemirror/commands";
 import { keymap } from "@codemirror/view";
 import { defaultKeymap, historyKeymap } from "@codemirror/commands";
 
-import { connectSocket, sendOperation } from "./network/socket";
+import { connectSocket, onStatusChange, sendOperation } from "./network/socket";
 import { documentModel } from "./CRDT/document";
 import { positionToCRDT } from "./CRDT/mapping";
 import { Annotation } from "@codemirror/state";
@@ -39,6 +39,9 @@ export default function Editor() {
   const pendingDeletes = useRef([]);
   const pendingRemoteOps = useRef([]);
   const editorReady = useRef(false);
+  const [connection, setConnection] = useState("connecting");
+
+  useEffect(() => onStatusChange(setConnection), []);
 
  
 
@@ -70,7 +73,13 @@ export default function Editor() {
    
     if (op.type === "insert") {
 
-     
+      // Already applied (e.g. history replayed after a reconnect): skip it so the
+      // character is not inserted into the editor view a second time.
+      if (block.crdt.nodes.has(op.key)) {
+        applying.current = false;
+        return;
+      }
+
       block.insertBetween(op.leftKey, op.rightKey, op.value, op.key);
 
      
@@ -213,14 +222,40 @@ export default function Editor() {
 
   }, []);
 
+  const statusLabel = {
+    connecting: "Connecting…",
+    connected: "Connected",
+    reconnecting: "Offline: reconnecting, your edits are saved and will sync",
+    closed: "Disconnected",
+  }[connection];
+
   return (
-    <div
-      ref={ref}
-      style={{
-        height: "100vh",
-        border: "1px solid #aaa",
-        overflow: "hidden"
-      }}
-    />
+    <div style={{ position: "relative" }}>
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 12,
+          zIndex: 10,
+          padding: "2px 10px",
+          borderRadius: 999,
+          fontSize: 12,
+          background: connection === "connected" ? "#e6f4ea" : "#fdecea",
+          color: connection === "connected" ? "#1b7f3b" : "#b3261e",
+        }}
+      >
+        {statusLabel}
+      </div>
+      <div
+        ref={ref}
+        style={{
+          height: "100vh",
+          border: "1px solid #aaa",
+          overflow: "hidden"
+        }}
+      />
+    </div>
   );
 }

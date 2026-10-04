@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test": "node --test server.test.js"
   },
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "WebSocket sync server for the collaborative editor",
   "dependencies": {
     "ws": "^8.19.0"
   }

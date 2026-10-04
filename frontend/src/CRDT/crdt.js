@@ -64,6 +64,12 @@ export function createCRDT(siteId = "local") {
     let id, key;
 
     if (forcedKey) {
+      // Remote operations can arrive more than once (e.g. the history replayed
+      // after a reconnect). Applying an insert we already have must be a no-op,
+      // otherwise the node would be re-linked and the document corrupted.
+      if (nodes.has(forcedKey) || pending.some((p) => p.key === forcedKey)) {
+        return forcedKey;
+      }
       const [siteId, counter] = forcedKey.split(":");
       id = { siteId, counter: Number(counter) };
       key = forcedKey;
